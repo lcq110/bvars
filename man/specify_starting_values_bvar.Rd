@@ -77,6 +77,12 @@ hierarchical prior for \eqn{\sigma^2_{\omega}}.}
 \item{\code{df}}{a scalar greater than 2 with the starting value 
 for the degrees of freedom parameter of the Student-t 
 conditional distribution of error term.}
+
+\item{\code{adaptive_scale}}{a positive scalar with the standard deviation of
+the adaptive proposal for the Student-t degrees of freedom parameter.}
+
+\item{\code{adaptation_iteration}}{a non-negative integer counting completed
+adaptive proposal iterations for the Student-t degrees of freedom parameter.}
 }
 \if{html}{\out{</div>}}
 }

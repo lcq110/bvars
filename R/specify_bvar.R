@@ -228,6 +228,14 @@ specify_starting_values_bvar = R6::R6Class(
     #' for the degrees of freedom parameter of the Student-t 
     #' conditional distribution of error term.
     df            = numeric(),
+
+    #' @field adaptive_scale a positive scalar with the standard deviation of
+    #' the adaptive proposal for the Student-t degrees of freedom parameter.
+    adaptive_scale = numeric(),
+
+    #' @field adaptation_iteration a non-negative integer counting completed
+    #' adaptive proposal iterations for the Student-t degrees of freedom parameter.
+    adaptation_iteration = numeric(),
     
     #' @description
     #' Create new starting values \code{StartingValuesBVAR}.
@@ -281,6 +289,10 @@ specify_starting_values_bvar = R6::R6Class(
       
       self$lambda         = rep(1, T)
       self$df             = 30
+      df_hessian          = 0.25 * T * trigamma(15) -
+        T * 29 / 28^2 - 2 / 29^2
+      self$adaptive_scale = sqrt(abs(1 / df_hessian))
+      self$adaptation_iteration = 0L
     }, # END initialize
     
     #' @description
@@ -304,7 +316,9 @@ specify_starting_values_bvar = R6::R6Class(
         sigma2_omega      = self$sigma2_omega,
         s_                = self$s_,
         lambda            = self$lambda,
-        df                = self$df
+        df                = self$df,
+        adaptive_scale    = self$adaptive_scale,
+        adaptation_iteration = self$adaptation_iteration
       )
     }, # END get_starting_values
     
@@ -340,6 +354,8 @@ specify_starting_values_bvar = R6::R6Class(
       self$s_           = last_draw$s_
       self$lambda       = last_draw$lambda
       self$df           = last_draw$df
+      self$adaptive_scale = last_draw$adaptive_scale
+      self$adaptation_iteration = last_draw$adaptation_iteration
     } # END set_starting_values
   ) # END public
 ) # END specify_starting_values_bvar

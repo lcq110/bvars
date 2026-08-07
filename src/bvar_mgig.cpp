@@ -69,6 +69,8 @@ Rcpp::List bvar_mgig_cpp(
   double  aux_s_        = as<double>(starting_values["s_"]);
   vec     aux_lambda    = as<vec>(starting_values["lambda"]);
   double  aux_df        = as<double>(starting_values["df"]);
+  double  adaptive_scale       = as<double>(starting_values["adaptive_scale"]);
+  int     adaptation_iteration = as<int>(starting_values["adaptation_iteration"]);
   vec     aux_sigma2(T, fill::ones);
   vec     aux_hetero_inv(T, fill::ones);
   mat     U = Y - aux_A * X;
@@ -101,9 +103,6 @@ Rcpp::List bvar_mgig_cpp(
   mat   posterior_lambda(T, SS);
   vec   posterior_df(SS);
   
-  // the initial value for the adaptive_scale is set to the negative inverse of 
-  // Hessian for the posterior log_kenel for df evaluated at df = 30
-  double    adaptive_scale      = abs(pow(0.25 * T * R::psigamma(15, 1) - T * 29 * pow(28, -2) - 2 * pow(29, -2), -1));
   const vec adptive_alpha_gamma = as<vec>(NumericVector::create(0.44, 0.6));
   int   ss = 0;
   
@@ -124,9 +123,16 @@ Rcpp::List bvar_mgig_cpp(
     
     if (debug) Rcout << " sample lambda" << endl;
     if ( !normal ) {
-      List df_tmp     = sample_df ( aux_df, adaptive_scale, aux_lambda, s, adptive_alpha_gamma );
+      List df_tmp     = sample_df(
+        aux_df,
+        adaptive_scale,
+        aux_lambda,
+        adaptation_iteration,
+        adptive_alpha_gamma
+      );
       aux_df          = as<double>(df_tmp["aux_df"]);
       adaptive_scale  = as<double>(df_tmp["adaptive_scale"]);
+      adaptation_iteration++;
       
       U_std           = sum(square( solve(trimatl(aux_L), U) ));
       U_std          /= N * trans(aux_sigma2);
@@ -205,7 +211,9 @@ Rcpp::List bvar_mgig_cpp(
       _["sigma2_omega"] = aux_sigma2_omega,
       _["s_"]       = aux_s_,
       _["lambda"]   = aux_lambda,
-      _["df"]       = aux_df
+      _["df"]       = aux_df,
+      _["adaptive_scale"] = adaptive_scale,
+      _["adaptation_iteration"] = adaptation_iteration
     ),
     _["posterior"]  = List::create(
       _["A"]        = posterior_A,
